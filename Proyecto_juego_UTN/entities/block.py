@@ -3,8 +3,31 @@ import random
 
 from settings import *
 
-def create_blocks():
-    # bloques
+def crear_bloques():
+    """
+    Genera la matriz de bloques del nivel y devuelve una lista con todos ellos.
+
+    Esta función crea una cuadrícula de bloques usando filas y columnas.
+    Cada bloque se representa como un diccionario con:
+        - "rect" : pygame.Rect con la posición y tamaño del bloque
+        - "color": color asignado aleatoriamente desde colores_posibles
+
+    Los bloques se distribuyen dejando un espacio uniforme entre ellos,
+    y desplazados desde la izquierda y arriba para que no queden pegados
+    a los bordes de la ventana.
+
+    La función se ejecuta una vez al iniciar el juego y los bloques son
+    utilizados posteriormente por colision_pelota_bloques() para detección
+    de impacto y eliminación.
+
+    Returns
+    -------
+    list[dict]
+        Lista de bloques, cada uno con:
+            - "rect": pygame.Rect
+            - "color": tuple (R, G, B)
+    """
+    # Configuración de la grilla de bloques
     filas = 8
     columnas = 8
     ancho_bloque = 60
