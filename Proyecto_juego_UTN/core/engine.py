@@ -22,7 +22,6 @@ def elementos_juego():
     bloques = crear_bloques() # Crea los bloques del nivel
     posicion_pelota_x, posicion_pelota_y, radio_pelota, velocidad_pelota_x, velocidad_pelota_y = crear_bola() # Crea la pelota: posición, radio y velocidades iniciales
 
-
     while corriendo: # Bucle principal del juego
         for evento in pygame.event.get(): # Manejo de eventos
             if evento.type == pygame.QUIT: # El jugador cerró la ventana
