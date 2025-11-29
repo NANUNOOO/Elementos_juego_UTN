@@ -1,0 +1,5 @@
+Jugador1 , 100
+Jugador2, 150
+Jugador3 , 300
+Jugador4, 80
+Jugador5, 220
