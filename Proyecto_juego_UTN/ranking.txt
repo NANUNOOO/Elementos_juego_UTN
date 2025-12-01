@@ -1,0 +1,7 @@
+vale,400
+dai,1260
+dafne,2180
+cielo,1260
+sol,180
+luna,520
+mati,220
