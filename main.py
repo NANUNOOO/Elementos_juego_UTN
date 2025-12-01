@@ -124,7 +124,7 @@ while juego_corriendo:
                 texto = f"{i + 1}. {nombre} - {puntos}"
                 funciones.dibujar_texto_centrado(ventana_principal, texto, funciones.fuente_botones, COLOR_BLANCO, pos_y)
                 pos_y += 60
-            
+             
         if funciones.dibujar_boton_interactivo(ventana_principal, rect_volver, "VOLVER") and not se_hizo_clic_previamente:
             ESTADO_ACTUAL = "MENU"
 

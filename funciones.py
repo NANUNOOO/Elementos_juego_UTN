@@ -96,10 +96,27 @@ def dibujar_boton_interactivo(superficie_destino, rectangulo_boton, texto_boton)
         return True
     return False
 
+# --- BUBLEE SORT---
+def ordenar_de_mayor_a_menor(matriz, columna_puntaje):
+    """
+    Algoritmo de Burbujeo para ordenar el ranking.
+    matriz: es la lista de tuplas [(nombre, puntos), (nombre, puntos)...]
+    columna_puntaje: es el índice 1, donde están los puntos.
+    """
+    cantidad_elementos = len(matriz)
+
+    for i in range(cantidad_elementos - 1):
+        for j in range(cantidad_elementos - 1 - i):
+            if matriz[j][columna_puntaje] < matriz[j + 1][columna_puntaje]:
+                # Intercambio de posiciones (Swap)
+                auxiliar = matriz[j + 1]
+                matriz[j + 1] = matriz[j]
+                matriz[j] = auxiliar
+
 # --- ARCHIVOS ---
 
 def leer_ranking_desde_archivo():
-    nombre_archivo_puntajes = "ranking.txt" # Cambiado a ranking.txt
+    nombre_archivo_puntajes = "ranking.txt"
     lista_mejores_puntajes = []
     
     if os.path.exists(nombre_archivo_puntajes):
@@ -108,11 +125,18 @@ def leer_ranking_desde_archivo():
                 datos_jugador = linea_texto.strip().split(",")
                 if len(datos_jugador) == 2:
                     nombre_jugador = datos_jugador[0]
+                    # Convertimos el puntaje a entero para poder ordenarlo numéricamente
                     puntaje_jugador = int(datos_jugador[1])
                     lista_mejores_puntajes.append((nombre_jugador, puntaje_jugador))
         
-    lista_mejores_puntajes.sort(key=lambda x: x[1], reverse=True)
+    # El 1 indica que ordenamos por el segundo elemento (el puntaje)
+    ordenar_de_mayor_a_menor(lista_mejores_puntajes, 1)
+    
+    # Devolvemos solo los 5 primeros
     return lista_mejores_puntajes[:5]
+
+
+
 
 def guardar_nuevo_puntaje(nombre_jugador, puntaje_obtenido):
     nombre_archivo_puntajes = "ranking.txt" # Cambiado a ranking.txt
