@@ -23,7 +23,11 @@ RADIO_PELOTA = 13
 VELOCIDAD_PALETA = 8
 ANCHO_PALETA_ORIGINAL = 170
 
-# Valores de Bloques
+# Valores de Bloques y Listas
 VALORES_PUNTOS_BLOQUES = {"rojo": 100, "verde": 80, "azul": 60, "gris": 40}
 LISTA_TIPOS_BLOQUES = ["rojo", "verde", "azul", "gris"]
 LISTA_TIPOS_POWER_UP = ["hoja", "fuego", "viento", "gota"]
+
+# --- SONIDO ---
+VOLUMEN_MUSICA = 0.4  # 40% (Para que no tape los efectos)
+VOLUMEN_EFECTOS = 0.7 # 70% (Más fuerte que la música)

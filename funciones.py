@@ -4,7 +4,6 @@ import os
 from constantes import *
 
 # --- VARIABLES GLOBALES (ESTADO DEL JUEGO) ---
-# Las definimos aquí para poder modificarlas desde las funciones
 lista_bloques = []
 lista_power_ups_cayendo = []
 lista_efectos_activos = []
@@ -17,8 +16,9 @@ vidas_jugador = 3
 puntuacion_actual = 0
 juego_esta_activo = False
 nombre_usuario_entrada = ""
+sonido_habilitado = True
 
-# Variables para imágenes y rectángulos (se inician en inicializar_recursos)
+# Variables para imágenes y recursos
 imagen_paleta_actual = None
 rectangulo_paleta = None
 imagen_paleta_base = None
@@ -31,29 +31,39 @@ fuente_texto_general = None
 fuente_puntuacion = None
 IMAGEN_FONDO = None
 
+diccionario_sonidos = {}
+
 # --- GESTION DE RECURSOS ---
 
 def cargar_imagen(ruta_archivo, tamano_deseado=None):
-    # Sin try-except, si falla el juego se cierra avisando el error
     imagen_cargada = pygame.image.load(ruta_archivo)
     if tamano_deseado:
         imagen_cargada = pygame.transform.scale(imagen_cargada, tamano_deseado)
     return imagen_cargada
 
+def cargar_sonido(nombre_archivo):
+    ruta = os.path.join("sonidos", nombre_archivo)
+    if os.path.exists(ruta):
+        sonido = pygame.mixer.Sound(ruta)
+        sonido.set_volume(VOLUMEN_EFECTOS)
+        return sonido
+    else:
+        print(f"Advertencia: No se encontró el sonido {nombre_archivo}")
+        return None
+
 def inicializar_recursos():
-    """Carga todas las imágenes y fuentes. Llamar despues de pygame.init()"""
     global imagen_paleta_base, imagen_corazon_1, diccionario_imagenes_bloques, diccionario_imagenes_powerups
     global IMAGEN_FONDO, fuente_titulo_principal, fuente_botones, fuente_texto_general, fuente_puntuacion
+    global diccionario_sonidos
+
+    pygame.mixer.init()
     
-    # Fuentes
     fuente_titulo_principal = pygame.font.SysFont("Arial", 50, bold=True)
     fuente_botones = pygame.font.SysFont("Arial", 30, bold=True)
     fuente_texto_general = pygame.font.SysFont("Arial", 25)
     fuente_puntuacion = pygame.font.Font(None, 36)
 
-    # Imágenes
     IMAGEN_FONDO = cargar_imagen("fondoazul.jpg", (ANCHO_VENTANA, ALTO_VENTANA))
-    # Icono (opcional)
     if os.path.exists("imagenes/arkanoide.png"):
         pygame.display.set_icon(cargar_imagen("imagenes/arkanoide.png"))
 
@@ -70,7 +80,69 @@ def inicializar_recursos():
     diccionario_imagenes_powerups["viento"] = cargar_imagen("imagenes/viento.png", (40, 40))
     diccionario_imagenes_powerups["gota"] = cargar_imagen("imagenes/gota.png", (40, 40))
 
-# --- FUNCIONES DE DIBUJO ---
+    # --- CARGA DE SONIDOS ---
+    diccionario_sonidos["rebote"] = cargar_sonido("rebote.wav")
+    diccionario_sonidos["romper"] = cargar_sonido("romper.wav")
+    diccionario_sonidos["perder_vida"] = cargar_sonido("perder.wav")
+    diccionario_sonidos["game_over"] = cargar_sonido("game_over.wav")
+    diccionario_sonidos["powerup"] = cargar_sonido("powerup.wav")
+
+    # Música de fondo (Ahora busca .wav que es lo que genera el script)
+    ruta_musica = os.path.join("sonidos", "musica_fondo.wav")
+    if os.path.exists(ruta_musica):
+        pygame.mixer.music.load(ruta_musica)
+        pygame.mixer.music.set_volume(VOLUMEN_MUSICA)
+        pygame.mixer.music.play(-1)
+    else:
+        print("Advertencia: No se encontró musica_fondo.wav")
+
+# --- FUNCIONES DE AUDIO ---
+
+def reproducir_sonido(nombre):
+    if sonido_habilitado and nombre in diccionario_sonidos and diccionario_sonidos[nombre]:
+        diccionario_sonidos[nombre].play()
+
+def alternar_sonido():
+    global sonido_habilitado
+    sonido_habilitado = not sonido_habilitado
+    
+    if sonido_habilitado:
+        pygame.mixer.music.unpause()
+    else:
+        pygame.mixer.music.pause()
+
+# --- FUNCIONES DE ORDENAMIENTO Y ARCHIVOS ---
+
+def ordenar_de_mayor_a_menor(matriz, columna_puntaje):
+    n = len(matriz)
+    for i in range(n - 1):
+        for j in range(n - 1 - i):
+            if matriz[j][columna_puntaje] < matriz[j + 1][columna_puntaje]:
+                aux = matriz[j + 1]
+                matriz[j + 1] = matriz[j]
+                matriz[j] = aux
+
+def leer_ranking_desde_archivo():
+    nombre_archivo_puntajes = "ranking.txt"
+    lista_mejores_puntajes = []
+    if os.path.exists(nombre_archivo_puntajes):
+        with open(nombre_archivo_puntajes, "r") as archivo_lectura:
+            for linea_texto in archivo_lectura:
+                datos_jugador = linea_texto.strip().split(",")
+                if len(datos_jugador) == 2:
+                    nombre_jugador = datos_jugador[0]
+                    puntaje_jugador = int(datos_jugador[1])
+                    lista_mejores_puntajes.append((nombre_jugador, puntaje_jugador))
+    
+    ordenar_de_mayor_a_menor(lista_mejores_puntajes, 1)
+    return lista_mejores_puntajes[:5]
+
+def guardar_nuevo_puntaje(nombre_jugador, puntaje_obtenido):
+    nombre_archivo_puntajes = "ranking.txt"
+    with open(nombre_archivo_puntajes, "a") as archivo_escritura:
+        archivo_escritura.write(f"{nombre_jugador},{puntaje_obtenido}\n")
+
+# --- DIBUJO ---
 
 def dibujar_texto_centrado(superficie_destino, texto_a_mostrar, fuente_texto, color_texto, posicion_y):
     superficie_texto = fuente_texto.render(texto_a_mostrar, True, color_texto)
@@ -96,53 +168,6 @@ def dibujar_boton_interactivo(superficie_destino, rectangulo_boton, texto_boton)
         return True
     return False
 
-# --- BUBLEE SORT---
-def ordenar_de_mayor_a_menor(matriz, columna_puntaje):
-    """
-    Algoritmo de Burbujeo para ordenar el ranking.
-    matriz: es la lista de tuplas [(nombre, puntos), (nombre, puntos)...]
-    columna_puntaje: es el índice 1, donde están los puntos.
-    """
-    cantidad_elementos = len(matriz)
-
-    for i in range(cantidad_elementos - 1):
-        for j in range(cantidad_elementos - 1 - i):
-            if matriz[j][columna_puntaje] < matriz[j + 1][columna_puntaje]:
-                # Intercambio de posiciones (Swap)
-                auxiliar = matriz[j + 1]
-                matriz[j + 1] = matriz[j]
-                matriz[j] = auxiliar
-
-# --- ARCHIVOS ---
-
-def leer_ranking_desde_archivo():
-    nombre_archivo_puntajes = "ranking.txt"
-    lista_mejores_puntajes = []
-    
-    if os.path.exists(nombre_archivo_puntajes):
-        with open(nombre_archivo_puntajes, "r") as archivo_lectura:
-            for linea_texto in archivo_lectura:
-                datos_jugador = linea_texto.strip().split(",")
-                if len(datos_jugador) == 2:
-                    nombre_jugador = datos_jugador[0]
-                    # Convertimos el puntaje a entero para poder ordenarlo numéricamente
-                    puntaje_jugador = int(datos_jugador[1])
-                    lista_mejores_puntajes.append((nombre_jugador, puntaje_jugador))
-        
-    # El 1 indica que ordenamos por el segundo elemento (el puntaje)
-    ordenar_de_mayor_a_menor(lista_mejores_puntajes, 1)
-    
-    # Devolvemos solo los 5 primeros
-    return lista_mejores_puntajes[:5]
-
-
-
-
-def guardar_nuevo_puntaje(nombre_jugador, puntaje_obtenido):
-    nombre_archivo_puntajes = "ranking.txt" # Cambiado a ranking.txt
-    with open(nombre_archivo_puntajes, "a") as archivo_escritura:
-        archivo_escritura.write(f"{nombre_jugador},{puntaje_obtenido}\n")
-
 # --- LOGICA DE JUEGO ---
 
 def iniciar_nueva_partida():
@@ -158,20 +183,17 @@ def iniciar_nueva_partida():
     lista_efectos_activos = []
     lista_power_ups_cayendo = []
     
-    # Reiniciar Paleta
     imagen_paleta_actual = imagen_paleta_base.copy()
     imagen_paleta_actual = pygame.transform.scale(imagen_paleta_actual, (ANCHO_PALETA_ORIGINAL, 30))
     rectangulo_paleta = imagen_paleta_actual.get_rect()
     rectangulo_paleta.centerx = ANCHO_VENTANA // 2
     rectangulo_paleta.y = ALTO_VENTANA - 80
     
-    # Reiniciar Pelota
     posicion_pelota_x = ANCHO_VENTANA // 2
     posicion_pelota_y = ALTO_VENTANA - 170
     velocidad_pelota_x = VELOCIDAD_PELOTA_BASE
     velocidad_pelota_y = -VELOCIDAD_PELOTA_BASE
     
-    # Generar Bloques
     lista_bloques.clear()
     cantidad_filas = random.choice([7, 8])
     cantidad_columnas = cantidad_filas
@@ -198,6 +220,9 @@ def iniciar_nueva_partida():
 
 def activar_power_up(tipo_power_up):
     global imagen_paleta_actual, rectangulo_paleta, velocidad_pelota_x, velocidad_pelota_y
+    
+    reproducir_sonido("powerup")
+
     tiempo_expiracion_nuevo = pygame.time.get_ticks() + DURACION_POWER_UP_MILISEGUNDOS
     
     for efecto_existente in lista_efectos_activos:
