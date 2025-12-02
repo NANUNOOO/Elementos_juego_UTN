@@ -5,3 +5,6 @@ DAI,180
 DAI,1340
 DAI,1900
 val,3760
+val,3480
+prueba,260
+prueba,1480

@@ -29,5 +29,5 @@ LISTA_TIPOS_BLOQUES = ["rojo", "verde", "azul", "gris"]
 LISTA_TIPOS_POWER_UP = ["hoja", "fuego", "viento", "gota"]
 
 # --- SONIDO ---
-VOLUMEN_MUSICA = 0.4  # 40% (Para que no tape los efectos)
+VOLUMEN_MUSICA = 0.3  # 30% (Para que no tape los efectos)
 VOLUMEN_EFECTOS = 0.7 # 70% (Más fuerte que la música)
